@@ -1,0 +1,72 @@
+//servo üles seadmine:
+#include <Servo.h>
+Servo myservo;
+ 
+
+//ultraheli kaugusmõõtja üles seadmine: vcc-5v, gnd-gnd
+int echoPin = 2; //pin 2 on ühendatud ultraheli kaja andur
+int trigPin = 3; //pin 3 on ühendatud trigger
+long duration;
+int distance;
+
+
+int phinput = A5;//pin A5st loetakse valgustakisti takistust.
+int takistus;
+
+void setup() {
+  myservo.writeMicroseconds(1600); //servo algasend, ei saanud kraade kasutada sest servo läks selle peale lolliks.
+  myservo.attach(9);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  Serial.begin(9600);
+  
+}
+
+void loop() {
+  Valgus();
+  Kaugus();
+  Serv0();
+  }
+
+ void Valgus() {
+  
+  takistus = analogRead(phinput);
+  Serial.print("PHOTO: ");
+  Serial.println(takistus); //serial monitorist väärtuste nägemine, et teada milliste väärtuste juures on valge ja milliste väärtuste juures on pime
+  delay(1);
+  
+ }
+
+ void Kaugus() {
+  digitalWrite(trigPin, LOW);
+  delay(1);
+  digitalWrite(trigPin, HIGH);
+  delay(100);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+  distance = duration * 0.034/2; //Mõõdetud väärtuse teisendamine sentimeetriteks
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.println("cm"); //serial monitoris väärtuste nägemine, et teada kui kaugelt panna servo liikuma
+  delay(1); 
+ }
+
+ void Serv0() {
+  //servo liigutamine juhul kui fototakisti takistus on väike, ehk on valgust, ja ultraheli kaugusmõõtja tulemus on väike, ehk midagi on piisavalt lähedal
+  if(takistus > 655 && distance < 20) {
+    myservo.writeMicroseconds(2200);
+    delay(2000);
+    }//delay 2 sekundit, et kaas vale mõõtmise korral liiga ruttu kinni ei tuleks
+  
+    else {
+      myservo.writeMicroseconds(1600);
+      delay(1);
+    }// kui lähim asi on kaugemal kui 20 cm või kui fototakisti mõõtmine on 655st väiksem siis pannakse kaas kinni või kui on juba kinni siis ta ei avane üldse
+    if(takistus < 656){
+      myservo.writeMicroseconds(1600);
+      delay(5000); //kui fototakisti mõõtetulemus on alla 656, ehk on pime, siis oodatakse 5 sekundit enne uute mõõtmiste tegemist.
+  }  
+ }
+ 
+  
+  
